@@ -296,9 +296,9 @@ for r in results_generator:
     speed_threshold_count = 0
     for data in last_frame_data:
         car = data["object"]
-        V_lat = car["Lat_Velocity"]
-        V_long = car["Long_Velocity"]
-        V_total = V_gps + np.sqrt(V_long ** 2 + V_lat ** 2)
+        V_lat = car["Lat_Velocity"] * 3.6
+        V_long = car["Long_Velocity"] * 3.6
+        V_total = V_gps * 3.6 + np.sqrt(V_long ** 2 + V_lat ** 2)
 
         if V_total <= jam_speed_threshold:
             speed_threshold_count += 1
@@ -308,7 +308,7 @@ for r in results_generator:
 
     cv2.putText(current_frame, f"Time Difference: {timestamp_difference}", (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
     cv2.putText(current_frame, f"Rear Objects: {current_frame_rear_count}", (30, 110), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
-    cv2.putText(current_frame, f"Patrol Speed: {V_gps}", (30, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+    cv2.putText(current_frame, f"Patrol Speed: {V_gps * 3.6}", (30, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
     cv2.imshow('Rear Detections', current_frame)
 
