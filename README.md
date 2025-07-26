@@ -13,7 +13,7 @@ git clone https://github.com/pikachoof/traffic_jam_detector.git
 3) Copy your video's name and put it in src/main.py in this line:
 
 ```
-FILENAME = PATH_PREFIX + "videos/your_video_name"
+FILENAME = PATH_PREFIX + "videos/**your_video_name**"
 ```
 
 NOTE: Don't put file extensions (like .avi, .mp4, e.t.c.) after your_video_name
