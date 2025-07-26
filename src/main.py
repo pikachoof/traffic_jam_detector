@@ -4,7 +4,7 @@ import numpy as np
 import json
 import regex as re
 
-# TODO: ADD PATROL SPEED, 
+# TODO: ADD PATROL SPEED
 
 def distance(x1, y1, x2, y2):
     return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
@@ -185,7 +185,7 @@ out = cv2.VideoWriter(output_video_path, fourcc, fps, (frame_width, frame_height
 print(f"Processing video: {video_path}")
 print(f"Output will be saved to: {output_video_path}")
 
-results_generator = model.predict(source=video_path, stream=True, conf=0.5, iou=0.45, show=False, verbose=False)
+results_generator = model.predict(source=video_path, stream=True, conf=0.6, iou=0.45, show=False, verbose=False)
 
 current_frame_number = 0
 total_rear_items_across_video = 0
@@ -216,13 +216,17 @@ for r in results_generator:
     gps = find_gps(current_frame_number, gps_data)
 
     if gps:
-        radar, timestamp_difference = find_radar(gps["Timestamp"], radar_data, 0.05)
+        radar, timestamp_difference = find_radar(gps["Timestamp"], radar_data, 0.025)
         last_timestamp_difference = timestamp_difference
 
     if radar:
         objects = radar["Objects"]
 
     rear_boxes = [box for box in boxes if box.cls[0] == rear_class_id]
+    rear_boxes_count = len(rear_boxes)
+
+    current_frame_rear_count += rear_boxes_count
+    total_rear_items_across_video += rear_boxes_count
 
     for box in rear_boxes:
         class_id = int(box.cls[0])  # Get class ID
@@ -232,9 +236,6 @@ for r in results_generator:
         
         # Ensure coordinates are integers for drawing
         bbox_coords = box.xyxy[0].cpu().numpy().astype(int)
-
-        current_frame_rear_count += 1
-        total_rear_items_across_video += 1 # Accumulate total count
 
         # 1) Include & only draw boxes around the items with class "rear"
         x1, y1, x2, y2 = bbox_coords
@@ -306,9 +307,11 @@ for r in results_generator:
     if speed_threshold_count >= jam_car_threshold:
         cv2.putText(current_frame, f"PROBKA", (int(frame_width / 2), 85), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
-    cv2.putText(current_frame, f"Time Difference: {timestamp_difference}", (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
-    cv2.putText(current_frame, f"Rear Objects: {current_frame_rear_count}", (30, 110), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
-    cv2.putText(current_frame, f"Patrol Speed: {V_gps * 3.6}", (30, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+    cv2.putText(current_frame, f"Time Difference: {timestamp_difference:.2f}", (30, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+    cv2.putText(current_frame, f"Rear Objects: {current_frame_rear_count}", (30, 110), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+
+    V_gps_kph = V_gps * 3.6
+    cv2.putText(current_frame, f"Patrol Speed: {V_gps_kph:.2f}", (30, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
     cv2.imshow('Rear Detections', current_frame)
 
